@@ -11,29 +11,24 @@ BaseObject::~BaseObject()
 
 }
 
-int BaseObject::GetX()
+float BaseObject::GetX()
 {
     return X;
 }
 
-void BaseObject::SetX(int x)
+void BaseObject::SetX(float x)
 {
     X = x;
 }
 
-int BaseObject::GetY()
+float BaseObject::GetY()
 {
     return Y;
 }
 
-void BaseObject::SetY(int y)
+void BaseObject::SetY(float y)
 {
     Y = y;
-}
-
-void BaseObject::Draw(QPainter *p)
-{
-
 }
 
 unsigned BaseObject::GetId()
@@ -46,12 +41,12 @@ void BaseObject::SetId(unsigned id)
     Id = id;
 }
 
-void BaseObject::SetSpeed(int s)
+void BaseObject::SetSpeed(float s)
 {
     Speed = s;
 }
 
-int BaseObject::GetSpeed()
+float BaseObject::GetSpeed()
 {
     return Speed;
 }

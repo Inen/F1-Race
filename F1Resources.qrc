@@ -1,1 +1,17 @@
-<RCC/>
+<RCC>
+    <qresource prefix="/Sounds"/>
+    <qresource prefix="/Images">
+        <file>Car.png</file>
+        <file>Barrier.png</file>
+        <file>Crash.png</file>
+        <file>RaceBackground.png</file>
+        <file>RoadOld.png</file>
+        <file>icon.png</file>
+        <file>DisabledSound.jpg</file>
+        <file>EnabledSound.jpg</file>
+        <file>Road.png</file>
+    </qresource>
+    <qresource prefix="/Leaders">
+        <file>LeaderBoard.txt</file>
+    </qresource>
+</RCC>

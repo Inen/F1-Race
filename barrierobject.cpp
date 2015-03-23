@@ -1,6 +1,6 @@
 #include "barrierobject.h"
 
-BarrierObject::BarrierObject(int x, int y, int s)
+BarrierObject::BarrierObject(float x, float y, float s)
 {
     X = x;
     Y = y;
@@ -15,6 +15,6 @@ BarrierObject::~BarrierObject()
 void BarrierObject::Draw(QPainter *p)
 {
     QPixmap pixmap;
-    if ( pixmap.load("/home/dima/Projects/F1_Race/003.png") )
+    if ( pixmap.load(":/Images/Barrier.png") )
         p->drawPixmap(X - pixmap.width(), Y - pixmap.height(), pixmap);
 }

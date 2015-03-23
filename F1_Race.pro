@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT       += core gui multimedia
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -27,3 +27,6 @@ HEADERS  += mainwindow.h \
     barrierobject.h
 
 FORMS    += mainwindow.ui
+
+RESOURCES += \
+    F1Resources.qrc

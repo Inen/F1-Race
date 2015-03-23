@@ -6,7 +6,7 @@
 class BarrierObject : public BaseObject
 {
 public:
-    BarrierObject(int x, int y, int s);
+    BarrierObject(float x, float y, float s);
     ~BarrierObject();
 
     void Draw(QPainter *p);

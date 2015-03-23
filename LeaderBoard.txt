@@ -1,8 +1,2 @@
-2
-Player:   0
-Player:   14
-Player:   0
-Player:   250
-Player:   0
-Player:   0
-Player:   383
+ Leader Board
+Player   Score

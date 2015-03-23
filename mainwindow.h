@@ -2,6 +2,10 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QtMultimedia/QSound>
+#include <QtMultimedia/QMediaPlayer>
+#include <QtMultimedia/QMediaPlaylist>
+#include <QFile>
 #include <objectmanager.h>
 #include <baseobject.h>
 #include <carobject.h>
@@ -22,6 +26,8 @@ public:
     void TripMode();
     void StartTripMode();
     void DrawRoad(QPainter *p);
+    void GameOver();
+    void PlayMusic();
 
 public slots:
     void update_timer();
@@ -29,12 +35,15 @@ public slots:
     void stop_timer();
     void restart();
     void clearScreen();
+    void leaderBoard();
+    void enableOrDisableSound();
 
 private:
     Ui::MainWindow *ui;
     QTimer *updateTimer;
     ObjectManager ObjManager;
     CarObject A;
+    QMediaPlayer *Music;
 
     int CellWidth;
     int CellHeight;
@@ -42,15 +51,16 @@ private:
     int FrameCenterY;
     int Y0;
     int Score;
-    int Counter;
-    int Speed;
-    bool DrawFlag;
-    bool CrashFlag;
+    int Counter, MusicCounter;
+    float Speed;
+    bool DrawFlag, CrashFlag, SoundFlag, FirstDrawFlag;
     int GameMode;
+    float RoadX, RoadY;
 
 protected:
     void paintEvent(QPaintEvent *);
     void keyPressEvent(QKeyEvent * event);
+
 };
 
 #endif // MAINWINDOW_H

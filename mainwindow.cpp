@@ -16,17 +16,30 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow),
     Score(0),
     Counter(0),
-    //GameMode(0),
-    Speed(15),
-    CrashFlag(0)
+    Speed(2),
+    CrashFlag(0),
+    SoundFlag(1)
 {
     ui->setupUi(this);
-    //setFocusPolicy(Qt::StrongFocus);
     ui->frame->setFocusPolicy(Qt::StrongFocus);
+    setWindowIcon(QIcon(":/Images/icon.png"));
+    FirstDrawFlag = 1;
 
+    Music = new QMediaPlayer(this);
+    PlayMusic();
+
+    QIcon icon;
+    icon.addFile(":/Images/EnabledSound.jpg");
+    ui->soundButton->setIcon(icon);
+    ui->soundButton->setFocusPolicy(Qt::NoFocus);
+    ui->leaderBoardButton->setFocusPolicy(Qt::NoFocus);
     ui->PauseMenu->setVisible(0);
     ui->gameOverWidget->setVisible(0);
     ui->menuWidget->setVisible(0);
+    ui->leadersWidget->setVisible(0);
+
+    RoadX = ui->frame->x();
+    RoadY = ui->frame->y() - ui->frame->height()/2 + 40;
 
     DrawFlag = 0;
     CellWidth = (ui->frame->width() - 40) / 3;
@@ -48,6 +61,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->startTripButton, SIGNAL(clicked()), this, SLOT(start_timer()));
     connect(ui->exitToMenuButton, SIGNAL(clicked()), this, SLOT(stop_timer()));
     connect(ui->exitToMenuButton, SIGNAL(clicked()), this, SLOT(clearScreen()));
+    connect(ui->leaderBoardButton, SIGNAL(clicked()), this, SLOT(leaderBoard()));
+    connect(ui->soundButton, SIGNAL(clicked()), this, SLOT(enableOrDisableSound()));
 }
 
 MainWindow::~MainWindow()
@@ -58,6 +73,12 @@ MainWindow::~MainWindow()
 void MainWindow::paintEvent(QPaintEvent *)
 {
     QPainter painter(this);
+    if (FirstDrawFlag)
+    {
+        QPixmap pixmap;
+        if ( pixmap.load(":/Images/RaceBackground.png") )
+            painter.drawPixmap(ui->centralWidget->x(), ui->centralWidget->y(), pixmap);
+    }
     DrawRoad(&painter);
     if (DrawFlag != 0)
     {
@@ -70,9 +91,23 @@ void MainWindow::paintEvent(QPaintEvent *)
     if (CrashFlag)
     {
         QPixmap pixmap;
-        if ( pixmap.load("/home/dima/Projects/F1_Race/005.png") )
-            painter.drawPixmap( A.GetX() - pixmap.width() / 2, A.GetY(), pixmap);
+        if ( pixmap.load(":/Images/Crash.png") )
+            painter.drawPixmap( A.GetX() - pixmap.width() / 2 + 4, A.GetY(), pixmap);
     }
+}
+
+void MainWindow::PlayMusic()
+{
+    if (SoundFlag)
+    {
+        Music->setVolume(50);
+        Music->setMedia(QUrl::fromLocalFile("/home/dima/Projects/F1_Race/GameTheme.mp3"));
+        Music->play();
+    } else
+    {
+        Music->stop();
+    }
+
 }
 
 void MainWindow::keyPressEvent (QKeyEvent * event )
@@ -103,12 +138,12 @@ void MainWindow::keyPressEvent (QKeyEvent * event )
         {
             if (event->key() == Qt::Key_Left)
             {
-                if (A.GetX() >= ui->frame->x())
+                if (A.GetX() - A.GetWidth() >= ui->frame->x())
                     A.SetX(A.GetX() - A.GetAccuracy());
             };
             if (event->key() == Qt::Key_Right)
             {
-                if (A.GetX() <= ui->frame->width())
+                if (A.GetX() + A.GetWidth() <= ui->frame->width())
                     A.SetX(A.GetX() + A.GetAccuracy());
             };
             if (event->key() == Qt::Key_Up)
@@ -118,7 +153,7 @@ void MainWindow::keyPressEvent (QKeyEvent * event )
             };
             if (event->key() == Qt::Key_Down)
             {
-                if (A.GetY() <= ui->frame->height())
+                if (A.GetY() + A.GetHeight() <= ui->frame->height())
                     A.SetY(A.GetY() + A.GetBrake());
             };
         }
@@ -136,6 +171,7 @@ void MainWindow::update_timer()
 
 void MainWindow::start_timer()
 {
+    ui->leaderBoardButton->setEnabled(false);
     if (QObject::sender() == ui->startClassicButton)
     {
         GameMode = 1;
@@ -146,11 +182,12 @@ void MainWindow::start_timer()
         GameMode = 2;
         StartTripMode();
     }
-    updateTimer->start(100);
+    updateTimer->start(10);
 }
 
 void MainWindow::stop_timer()
 {
+    ui->leaderBoardButton->setEnabled(true);
     updateTimer->stop();
     update();
 }
@@ -175,6 +212,8 @@ void MainWindow::StartTripMode()
 
 void MainWindow::restart()
 {
+    Score = 0;
+    Speed = 2;
     auto it = ObjManager.GetObjects()->begin();
     while( it != ObjManager.GetObjects()->end() )
     {
@@ -252,6 +291,13 @@ void MainWindow::ClassicMode()
     }
 
     auto it = ObjManager.GetObjects()->begin();
+
+//    if (RoadY <= ui->frame->y() - 20)
+//    {
+        RoadY += (*it)->GetSpeed();
+//    } else
+//        RoadY = ui->frame->y() - ui->frame->height()/2 + 40;
+
     while( it != ObjManager.GetObjects()->end() )
     {
         (*it)->SetY((*it)->GetY() + (*it)->GetSpeed());
@@ -265,48 +311,81 @@ void MainWindow::ClassicMode()
         }
 
         if (A.GetX() >= ((*it)->GetX() - CellWidth / 2) && A.GetX() <= ((*it)->GetX() + CellWidth / 2)
-                && A.GetY() <= (*it)->GetY() && A.GetY() + 40 >= (*it)->GetY())
+                && A.GetY() <= (*it)->GetY() && A.GetY() + 60 >= (*it)->GetY())
         {
-            MainWindow::stop_timer();
-            ui->gameOverWidget->setVisible(1);
-            ui->scoreOverLabel->setText(QString::number(Score));
-            CrashFlag = 1;
+            GameOver();
         }
         ++it;
     }
 
     Counter++;
-    if (Speed < 25 && Counter == 50)
+    if (Speed < 5 && Counter == 100)
     {
+        if (Speed < 11) Speed += 0.1;
         for(auto it = ObjManager.GetObjects()->begin(); it != ObjManager.GetObjects()->end(); ++it)
         {
             (*it)->SetSpeed(Speed);
             qDebug() << (*it)->GetSpeed();
         }
-        if (Speed < 40) Speed++;
         Counter = 0;
-    } else if (Speed < 35 && Counter == 100)
+    } else if (Speed < 8 && Counter == 400)
     {
+        if (Speed < 11) Speed += 0.1;
         for(auto it = ObjManager.GetObjects()->begin(); it != ObjManager.GetObjects()->end(); ++it)
         {
             (*it)->SetSpeed(Speed);
             qDebug() << (*it)->GetSpeed();
         }
-        if (Speed < 40) Speed++;
         Counter = 0;
-    } else if(Speed < 40 && Counter == 100)
+    } else if(Speed < 11 && Counter == 800)
     {
+        if (Speed < 11) Speed += 0.1;
         for(auto it = ObjManager.GetObjects()->begin(); it != ObjManager.GetObjects()->end(); ++it)
         {
             (*it)->SetSpeed(Speed);
             qDebug() << (*it)->GetSpeed();
         }
-        if (Speed < 40) Speed++;
         Counter = 0;
     }
     ui->ScoreLabel->setText(QString::number(Score));
-    if (Speed != 40) ui->SpeedLabel->setText(QString::number(Speed - 14));
+    if (Speed != 11) ui->SpeedLabel->setText(QString::number(Speed));
     else ui->SpeedLabel->setText("Maximum!");
+
+    if (MusicCounter <= 1541)
+    {
+        MusicCounter++;
+    } else
+    {
+        Music->stop();
+        PlayMusic();
+        MusicCounter = 0;
+    }
+}
+
+
+void MainWindow::GameOver()
+{
+
+    MainWindow::stop_timer();
+    ui->gameOverWidget->setVisible(1);
+    ui->scoreOverLabel->setText(QString::number(Score));
+    if (SoundFlag)
+    {
+        //            QSound *CrashSound = new QSound(":/Sounds/Test.wav");
+        //            CrashSound->play();
+        QMediaPlayer *player = new QMediaPlayer(this);
+        player->setVolume(50);
+        player->setMedia(QUrl::fromLocalFile("/home/dima/Projects/F1_Race/Crash.mp3"));
+        player->play();
+    }
+    QFile file("./LeaderBoard.txt");
+    file.open(QIODevice::Append | QIODevice::Text);
+    QTextStream out(&file);
+    out << "Player:   " <<Score;
+    out << "\n";
+    file.close();
+    CrashFlag = 1;
+
 }
 
 void MainWindow::TripMode()
@@ -316,9 +395,24 @@ void MainWindow::TripMode()
 
 void MainWindow::DrawRoad(QPainter *p)
 {
-    QPixmap pixmap;
-    if ( pixmap.load("/home/dima/Projects/F1_Race/002_2.png") )
-        p->drawPixmap( ui->frame->x(), ui->frame->y(), pixmap);
+    QPixmap pixmap1;
+    if ( pixmap1.load(":/Images/Road.png") )
+    {
+        float RoadX1 = RoadX, RoadY1 = RoadY;
+        float RoadX2 = RoadX, RoadY2 = RoadY - pixmap1.height();
+        if (RoadY2 + pixmap1.height() >= ui->frame->height())
+        {
+            RoadY1 = RoadY2 - pixmap1.height();
+            RoadY = RoadY2;
+        }
+        if (RoadY1 + pixmap1.height() >= ui->frame->height())
+        {
+            RoadY2 = RoadY1 - pixmap1.height();
+            RoadY = RoadY1;
+        }
+        p->drawPixmap(RoadX1, RoadY1, pixmap1);
+        p->drawPixmap(RoadX2, RoadY2, pixmap1);
+    }
 }
 
 void MainWindow::clearScreen()
@@ -335,4 +429,42 @@ void MainWindow::clearScreen()
         ++it;
     }
     update();
+}
+
+void MainWindow::leaderBoard()
+{
+    QFile file("./LeaderBoard.txt");
+    if (!file.open(QFile::ReadOnly | QFile::Text))
+    {
+        file.open(QIODevice::Append | QIODevice::Text);
+        QTextStream out(&file);
+        out << "Player:   " <<Score;
+        out << "\n";
+        file.close();
+    }
+    QTextStream text(&file);
+    QString strText = text.readAll();
+    ui->textBrowser->clear();
+    ui->textBrowser->setAlignment(Qt::AlignCenter);
+
+    ui->textBrowser->append(strText);
+    file.close();
+    ui->leadersWidget->show();
+}
+
+void MainWindow::enableOrDisableSound()
+{
+    QIcon icon;
+    if (SoundFlag)
+    {
+        SoundFlag = 0;
+        icon.addFile(":/Images/DisabledSound.jpg");
+        ui->soundButton->setIcon(icon);
+    } else
+    {
+        SoundFlag = 1;
+        icon.addFile(":/Images/EnabledSound.jpg");
+        ui->soundButton->setIcon(icon);
+    }
+    PlayMusic();
 }

@@ -4,6 +4,7 @@
 #include <QPainter>
 #include <vector>
 
+
 class BaseObject
 {
 public:
@@ -12,24 +13,24 @@ public:
 
     virtual void Draw(QPainter *p) = 0;
 
-    int GetX();
-    void SetX(int x);
-    int GetY();
-    void SetY(int y);
+    float GetX();
+    void SetX(float x);
+    float GetY();
+    void SetY(float y);
     unsigned GetId();
     void SetId(unsigned id);
-    int GetSpeed();
-    void SetSpeed(int s);
+    float GetSpeed();
+    void SetSpeed(float s);
 
 
     typedef std::vector <BaseObject *> Container;
     typedef std::vector <BaseObject *>::iterator Iterator;
 
 protected:
-    int X = 0;
-    int Y = 0;
+    float X = 0;
+    float Y = 0;
     unsigned Id = 0;
-    int Speed = 15;
+    float Speed = 2;
 };
 
 #endif // BASEOBJECT_H
